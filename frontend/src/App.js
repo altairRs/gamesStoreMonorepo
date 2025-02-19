@@ -1,25 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+// frontend/src/App.js
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import routing components
+import ProductList from './components/ProductList';
+import ProductDetails from './components/ProductDetails'; // Import ProductDetails
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <BrowserRouter> {/* Wrap your app with BrowserRouter */}
+            <div className="App" style={{ backgroundColor: '#111', color: '#eee', minHeight: '100vh', paddingBottom: '20px' }}> {/* App-level dark background style */}
+                <h1 style={{ textAlign: 'center', padding: '20px', color: '#fff' }}>Game Store</h1> {/* Styled main heading */}
+                <Routes> {/* Define your routes within Routes */}
+                    <Route path="/" element={<ProductList />} /> {/* Route for product list (homepage) */}
+                    <Route path="/products/:productId" element={<ProductDetails />} /> {/* Route for product details */}
+                </Routes>
+            </div>
+        </BrowserRouter>
+    );
 }
 
 export default App;

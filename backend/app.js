@@ -1,12 +1,14 @@
 const express = require("express");
 const connectDB = require("./db");
 require("dotenv").config();
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 
 // Import User Routes
 const userRoutes = require('./Routes/userRoutes');
