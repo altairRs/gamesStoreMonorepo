@@ -16,17 +16,19 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const { search } = req.query; // <--- Correctly extract search query
+        const { search, category } = req.query; // Extract 'search' and 'category' query parameters
 
-        let filter = {}; 
+        let filter = {}; // Default filter is empty (get all products)
 
         if (search) {
-            filter = {
-                $text: { $search: search } // <--- Correctly use $text operator and search term
-            };
+            filter.$text = { $search: search }; // Add text search filter if search term is provided
         }
 
-        const products = await Product.find(filter); // <--- Apply the filter in Product.find()
+        if (category) {
+            filter.category = category; // Add category filter if category is provided
+        }
+
+        const products = await Product.find(filter); // Apply the combined filter
         res.status(200).json(products);
     } catch (error) {
         console.error('Error getting products:', error);

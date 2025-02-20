@@ -1,21 +1,27 @@
 // frontend/src/components/ProductList.js
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom'; // Import useLocation
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function ProductList() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const location = useLocation(); // Get current location object
-    const searchParams = new URLSearchParams(location.search); // Create URLSearchParams object from query string
-    const searchTerm = searchParams.get('search') || ''; // Get 'search' query parameter, default to empty string
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const searchTerm = searchParams.get('search') || '';
+    const categoryFilter = searchParams.get('category') || ''; // Get 'category' query parameter
+    const [selectedCategory, setSelectedCategory] = useState(categoryFilter); // State for selected category in dropdown
+    const navigate = useNavigate(); // Hook for navigation
+
+    // Example categories (replace with dynamic categories from backend in real app)
+    const categories = ['All Categories', 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Puzzle'];
 
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}`); // Include search query in API request
+                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}`); // Include category in API request
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -29,23 +35,38 @@ function ProductList() {
         };
 
         fetchProducts();
-    }, [searchTerm]); // Re-fetch products when searchTerm changes
+    }, [searchTerm, selectedCategory]); // Re-fetch when searchTerm or selectedCategory changes
 
-    if (loading) {
-        return <p style={{ color: '#eee' }}>Loading products...</p>; // Light text for loading message
-    }
+    const handleCategoryChange = (event) => {
+        const newCategory = event.target.value;
+        setSelectedCategory(newCategory); // Update selectedCategory state
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(newCategory)}`); // Update URL with category filter
+    };
 
-    if (error) {
-        return <p style={{ color: '#f44336' }}>Error loading products: {error.message}</p>; // Error text in red
-    }
 
     return (
         <div style={productListContainerStyle}>
             <h2 style={productListHeadingStyle}>Product Catalog</h2>
-            <ul style={productListUlStyle}>
+
+            <div style={filterSectionStyle}> {/* Filter section container */}
+                <label htmlFor="categoryFilter" style={filterLabelStyle}>Filter by Category:</label>
+                <select
+                    id="categoryFilter"
+                    value={selectedCategory}
+                    onChange={handleCategoryChange}
+                    style={categoryDropdownStyle} // Style for category dropdown
+                >
+                    {categories.map(cat => (
+                        <option key={cat} value={cat === 'All Categories' ? '' : cat}>{cat}</option> // Options for categories
+                    ))}
+                </select>
+            </div>
+
+
+            <ul style={productListUlStyle}> 
                 {products.map(product => (
                     <li key={product._id} style={productListItemStyle}>
-                        <Link to={`/products/${product._id}`} style={{ textDecoration: 'none', color: 'inherit' }}> {/* Wrap with Link */}
+                        <Link to={`/products/${product._id}`} style={{ textDecoration: 'none', color: 'inherit' }}> {/* Link to product details */}
                             <h3 style={productNameStyle}>{product.name}</h3>
                             <p style={productCategoryStyle}>Category: {product.category}</p>
                             <p style={productDescriptionStyle}>{product.description}</p>
@@ -65,13 +86,36 @@ function ProductList() {
                                     ))}
                                 </div>
                             )}
-                        </Link> {/* End Link */}
+                        </Link>
                     </li>
                 ))}
             </ul>
         </div>
     );
 }
+
+// --- Add styles for filter section and category dropdown ---
+const filterSectionStyle = {
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+};
+
+const filterLabelStyle = {
+    color: '#eee',
+    marginRight: '10px',
+    fontSize: '1.1rem',
+};
+
+const categoryDropdownStyle = {
+    padding: '8px 12px',
+    borderRadius: '4px',
+    border: '1px solid #555',
+    backgroundColor: '#444',
+    color: '#eee',
+    fontSize: '1rem',
+};
+
 
 // --- Inline Styles - Black Theme (Vercel-inspired) ---
 const productListContainerStyle = {
