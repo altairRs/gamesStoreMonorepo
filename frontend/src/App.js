@@ -4,7 +4,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProductList from './components/ProductList';
 import ProductDetails from './components/ProductDetails';
 import NavigationBar from './components/NavigationBar';
-import ShoppingCart from './components/ShoppingCart'; // Import ShoppingCart
+import ShoppingCart from './components/ShoppingCart';
+import Login from './components/Login'; // Import Login
+import Register from './components/Register'; // Import Register
 
 function App() {
     return (
@@ -15,7 +17,9 @@ function App() {
                 <Routes>
                     <Route path="/" element={<ProductList />} />
                     <Route path="/products/:productId" element={<ProductDetails />} />
-                    <Route path="/cart" element={<ShoppingCart />} /> {/* Route for ShoppingCart */}
+                    <Route path="/cart" element={<ShoppingCart />} />
+                    <Route path="/login" element={<Login />} /> {/* Route for Login */}
+                    <Route path="/register" element={<Register />} /> {/* Route for Register */}
                 </Routes>
             </div>
         </BrowserRouter>
