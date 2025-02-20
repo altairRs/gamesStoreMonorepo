@@ -10,21 +10,33 @@ function ProductList() {
     const searchParams = new URLSearchParams(location.search);
     const searchTerm = searchParams.get('search') || '';
     const categoryFilter = searchParams.get('category') || '';
-    const priceFilterMin = searchParams.get('minPrice') || ''; // Get minPrice from query
-    const priceFilterMax = searchParams.get('maxPrice') || ''; // Get maxPrice from query
+    const priceFilterMin = searchParams.get('minPrice') || '';
+    const priceFilterMax = searchParams.get('maxPrice') || '';
+    const sortFilterBy = searchParams.get('sortBy') || ''; // Get sortBy from query
+    const sortFilterOrder = searchParams.get('sortOrder') || ''; // Get sortOrder from query
     const [selectedCategory, setSelectedCategory] = useState(categoryFilter);
-    const [minPrice, setMinPrice] = useState(priceFilterMin);     // State for min price input
-    const [maxPrice, setMaxPrice] = useState(priceFilterMax);     // State for max price input
+    const [minPrice, setMinPrice] = useState(priceFilterMin);
+    const [maxPrice, setMaxPrice] = useState(priceFilterMax);
+    const [sortBy, setSortBy] = useState(sortFilterBy);       // State for sortBy dropdown
+    const [sortOrder, setSortOrder] = useState(sortFilterOrder); // State for sortOrder (asc/desc) - not directly used in UI dropdown in this example
     const navigate = useNavigate();
 
     const categories = ['All Categories', 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Puzzle'];
+    const sortByOptions = [ // Options for sorting dropdown
+        { value: '', label: 'No Sorting' },
+        { value: 'price-asc', label: 'Price: Low to High' },
+        { value: 'price-desc', label: 'Price: High to Low' },
+        { value: 'name-asc', label: 'Name: A-Z' },
+        { value: 'name-desc', label: 'Name: Z-A' },
+    ];
+
 
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Include price range in API request
+                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(sortBy.split('-')[0])}&sortOrder=${encodeURIComponent(sortBy.split('-')[1])}`); // Include sorting in API request
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -38,31 +50,38 @@ function ProductList() {
         };
 
         fetchProducts();
-    }, [searchTerm, selectedCategory, minPrice, maxPrice]); // Re-fetch when price range changes
+    }, [searchTerm, selectedCategory, minPrice, maxPrice, sortBy]); // Re-fetch when sorting changes
+
 
     const handleCategoryChange = (event) => {
         const newCategory = event.target.value;
         setSelectedCategory(newCategory);
-        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(newCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Update URL with price range
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(newCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(sortBy)}`); // Update URL with sorting
     };
 
     const handleMinPriceChange = (event) => {
-        setMinPrice(event.target.value); // Update minPrice state
-        // Note: We don't navigate immediately on minPrice/maxPrice change, only on blur or explicit filter application
+        setMinPrice(event.target.value);
     };
 
     const handleMaxPriceChange = (event) => {
-        setMaxPrice(event.target.value); // Update maxPrice state
+        setMaxPrice(event.target.value);
     };
 
     const applyPriceFilter = () => {
-        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Navigate with price range
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(sortBy)}`); // Update URL with sorting
     };
 
     const clearPriceFilter = () => {
-        setMinPrice(''); // Clear minPrice state
-        setMaxPrice(''); // Clear maxPrice state
-        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=&maxPrice=`); // Navigate to clear price filter in URL
+        setMinPrice('');
+        setMaxPrice('');
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=&maxPrice=&sortBy=${encodeURIComponent(sortBy)}`); // Update URL with sorting
+    };
+
+    const handleSortByChange = (event) => {
+        const newSortValue = event.target.value;
+        setSortBy(newSortValue); // Update sortBy state
+        setSortOrder(newSortValue.split('-')[1] || ''); // Update sortOrder state based on selected value (asc/desc or empty)
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(newSortValue)}&sortOrder=${encodeURIComponent(newSortValue.split('-')[1] || '')}`); // Update URL with sorting, extract sortOrder from value
     };
 
 
@@ -84,7 +103,7 @@ function ProductList() {
                 </select>
             </div>
 
-            <div style={priceFilterSectionStyle}> {/* Price filter section */}
+            <div style={priceFilterSectionStyle}>
                 <label style={filterLabelStyle}>Filter by Price:</label>
                 <input
                     type="number"
@@ -93,7 +112,7 @@ function ProductList() {
                     onChange={handleMinPriceChange}
                     style={priceInputStyle}
                 />
-                <span style={priceRangeSeparatorStyle}>-</span> {/* Separator dash */}
+                <span style={priceRangeSeparatorStyle}>-</span>
                 <input
                     type="number"
                     placeholder="Max Price"
@@ -101,8 +120,22 @@ function ProductList() {
                     onChange={handleMaxPriceChange}
                     style={priceInputStyle}
                 />
-                <button onClick={applyPriceFilter} style={applyFilterButtonStyle}>Apply</button> {/* Apply button */}
-                <button onClick={clearPriceFilter} style={clearFilterButtonStyle}>Clear</button> {/* Clear button */}
+                <button onClick={applyPriceFilter} style={applyFilterButtonStyle}>Apply</button>
+                <button onClick={clearPriceFilter} style={clearFilterButtonStyle}>Clear</button>
+            </div>
+
+            <div style={sortSectionStyle}> {/* Sorting section */}
+                <label htmlFor="sortByFilter" style={filterLabelStyle}>Sort By:</label>
+                <select
+                    id="sortByFilter"
+                    value={sortBy}
+                    onChange={handleSortByChange}
+                    style={sortDropdownStyle} // Style for sort dropdown
+                >
+                    {sortByOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option> // Options for sorting
+                    ))}
+                </select>
             </div>
 
 
@@ -136,6 +169,23 @@ function ProductList() {
         </div>
     );
 }
+
+// --- Add styles for sort section and dropdown ---
+const sortSectionStyle = {
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+};
+
+const sortDropdownStyle = {
+    padding: '8px 12px',
+    borderRadius: '4px',
+    border: '1px solid #555',
+    backgroundColor: '#444',
+    color: '#eee',
+    fontSize: '1rem',
+    marginLeft: '10px', // Added marginLeft for spacing
+};
 
 // --- Add styles for price filter section and elements ---
 const priceFilterSectionStyle = {

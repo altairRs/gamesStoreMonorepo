@@ -16,48 +16,45 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const { search, category, minPrice, maxPrice } = req.query;
+        const { search, category, minPrice, maxPrice, sortBy, sortOrder } = req.query; // Extract sorting parameters
 
         let filter = {};
-
         if (search) {
             filter.$text = { $search: search };
         }
-
         if (category) {
             filter.category = category;
         }
 
-        let priceFilter = {}; // Initialize priceFilter separately
-
+        let priceFilter = {};
         const parsedMinPrice = parseFloat(minPrice);
         const parsedMaxPrice = parseFloat(maxPrice);
+        const isValidMinPrice = !isNaN(parsedMinPrice);
+        const isValidMaxPrice = !isNaN(parsedMaxPrice);
 
-        const isValidMinPrice = !isNaN(parsedMinPrice); // Check if parsedMinPrice is a valid number (not NaN)
-        const isValidMaxPrice = !isNaN(parsedMaxPrice); // Check if parsedMaxPrice is a valid number (not NaN)
-
-
-        if (isValidMinPrice && isValidMaxPrice) { // Both minPrice and maxPrice are valid numbers
-            priceFilter = {
-                $gte: parsedMinPrice,
-                $lte: parsedMaxPrice
-            };
-        } else if (isValidMinPrice) { // Only minPrice is valid
-            priceFilter = {
-                $gte: parsedMinPrice
-            };
-        } else if (isValidMaxPrice) { // Only maxPrice is valid
-            priceFilter = {
-                $lte: parsedMaxPrice
-            };
+        if (isValidMinPrice && isValidMaxPrice) {
+            priceFilter = { $gte: parsedMinPrice, $lte: parsedMaxPrice };
+        } else if (isValidMinPrice) {
+            priceFilter = { $gte: parsedMinPrice };
+        } else if (isValidMaxPrice) {
+            priceFilter = { $lte: parsedMaxPrice };
         }
-
-        if (Object.keys(priceFilter).length > 0) { // Only apply price filter if it's not empty
+        if (Object.keys(priceFilter).length > 0) {
             filter.price = priceFilter;
         }
 
+        let sort = {}; // Default sort is no sorting
+        if (sortBy) {
+            let order = sortOrder === 'desc' ? -1 : 1; // Determine sort order (-1 for desc, 1 for asc)
+            if (sortBy === 'price') {
+                sort.price = order; // Sort by price
+            } else if (sortBy === 'name') {
+                sort.name = order; // Sort by name
+            }
+        }
 
-        const products = await Product.find(filter);
+
+        const products = await Product.find(filter).sort(sort); // Apply sort to the query
         res.status(200).json(products);
     } catch (error) {
         console.error('Error getting products:', error);
