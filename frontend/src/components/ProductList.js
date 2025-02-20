@@ -1,18 +1,21 @@
 // frontend/src/components/ProductList.js
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Import useLocation
 
 function ProductList() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const location = useLocation(); // Get current location object
+    const searchParams = new URLSearchParams(location.search); // Create URLSearchParams object from query string
+    const searchTerm = searchParams.get('search') || ''; // Get 'search' query parameter, default to empty string
 
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('http://localhost:4000/api/products');
+                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}`); // Include search query in API request
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -26,7 +29,7 @@ function ProductList() {
         };
 
         fetchProducts();
-    }, []);
+    }, [searchTerm]); // Re-fetch products when searchTerm changes
 
     if (loading) {
         return <p style={{ color: '#eee' }}>Loading products...</p>; // Light text for loading message

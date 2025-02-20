@@ -16,7 +16,17 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const products = await Product.find();
+        const { search } = req.query; // <--- Correctly extract search query
+
+        let filter = {}; 
+
+        if (search) {
+            filter = {
+                $text: { $search: search } // <--- Correctly use $text operator and search term
+            };
+        }
+
+        const products = await Product.find(filter); // <--- Apply the filter in Product.find()
         res.status(200).json(products);
     } catch (error) {
         console.error('Error getting products:', error);

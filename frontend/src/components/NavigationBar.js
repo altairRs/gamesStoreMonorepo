@@ -1,27 +1,71 @@
 // frontend/src/components/NavigationBar.js
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext'; // Import useCart hook
+import React, { useState } from 'react'; // Import useState
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useCart } from '../context/CartContext';
 
 function NavigationBar() {
-    const { cartItemsCount } = useCart(); // Access cartItemsCount from CartContext
+    const { cartItemsCount } = useCart();
+    const [searchTerm, setSearchTerm] = useState(''); // State for search term
+    const navigate = useNavigate(); // Hook for programmatic navigation
+
+    const handleSearchInputChange = (event) => {
+        setSearchTerm(event.target.value); // Update searchTerm state on input change
+    };
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault(); // Prevent default form submission behavior
+        navigate(`/?search=${encodeURIComponent(searchTerm)}`); // Navigate to homepage with search query
+    };
 
     return (
-        <nav style={navBarStyle}> {/* Apply navigation bar style */}
-            <ul style={navListStyle}> {/* Apply list style for navigation items */}
-                <li style={navListItemStyle}> {/* Style for each list item */}
-                    <Link to="/" style={navLinkStyle}>Home</Link> {/* Link to homepage */}
+        <nav style={navBarStyle}>
+            <ul style={navListStyle}>
+                <li style={navListItemStyle}>
+                    <Link to="/" style={navLinkStyle}>Home</Link>
                 </li>
-                {/* You can add more navigation links here later */}
-                <li style={navListItemStyle}> {/* Cart link and count */}
+                <li style={navListItemStyle}>
+                    <form onSubmit={handleSearchSubmit} style={{ display: 'flex' }}> {/* Search form */}
+                        <input
+                            type="text"
+                            placeholder="Search games..."
+                            value={searchTerm}
+                            onChange={handleSearchInputChange}
+                            style={searchInputStyle} // Style for search input
+                        />
+                        <button type="submit" style={searchButtonStyle}>Search</button> {/* Search button */}
+                    </form>
+                </li>
+                <li style={navListItemStyle}>
                     <Link to="/cart" style={navLinkStyle}>
-                        🛒 Cart ({cartItemsCount}) {/* Cart icon (🛒) and item count */}
+                        🛒 Cart ({cartItemsCount})
                     </Link>
                 </li>
             </ul>
         </nav>
     );
 }
+
+// --- Add styles for search input and button ---
+const searchInputStyle = {
+    padding: '8px',
+    borderRadius: '4px 0 0 4px', // Rounded left corners
+    border: '1px solid #555',
+    borderRight: 'none',        // Remove right border to join with button
+    backgroundColor: '#444',
+    color: '#eee',
+    width: '200px',
+};
+
+const searchButtonStyle = {
+    padding: '8px 15px',
+    borderRadius: '0 4px 4px 0', // Rounded right corners
+    border: '1px solid #555',
+    borderLeft: 'none',         // Remove left border to join with input
+    backgroundColor: '#007bff',
+    color: 'white',
+    cursor: 'pointer',
+};
+
 
 // --- Inline Styles for Navigation Bar (you can customize these) ---
 const navBarStyle = {
