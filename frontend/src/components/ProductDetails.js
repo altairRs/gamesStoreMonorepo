@@ -1,12 +1,15 @@
 // frontend/src/components/ProductDetails.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // Hook to access URL parameters
+import { useCart } from '../context/CartContext';
+
 
 function ProductDetails() {
     const { productId } = useParams(); // Get the productId from the URL
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { addToCart } = useCart();
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -45,6 +48,11 @@ function ProductDetails() {
         return <p>Product not found.</p>; // Should not usually reach here if 404 is handled correctly, but as a fallback
     }
 
+    const handleAddToCart = () => {
+        addToCart(product); // Call addToCart function from context, passing the product
+        alert(`${product.name} added to cart!`); // Basic feedback - replace with better UI later
+    };
+
     return (
         <div style={productDetailsContainerStyle}> {/* Container style */}
             <h2 style={productDetailsNameStyle}>{product.name}</h2> {/* Product name */}
@@ -67,6 +75,10 @@ function ProductDetails() {
                 </div>
             )}
             {/* Add "Add to Cart" button here later */}
+            <button style={addToCartButtonStyle} onClick={handleAddToCart}> {/* Add to cart button */}
+                Add to Cart
+            </button>
+            
         </div>
     );
 }
@@ -131,6 +143,23 @@ const productDetailsImageStyle = {
     marginRight: '20px',
     borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0,0,0,0.4)', // Stronger shadow for images
+};
+
+const addToCartButtonStyle = {
+    padding: '12px 24px',
+    fontSize: '1.1rem',
+    fontWeight: 'bold',
+    backgroundColor: '#007bff', // Example button color
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+    marginTop: '20px',
+
+    '&:hover': {
+        backgroundColor: '#0056b3', // Darker shade on hover
+    },
 };
 
 
