@@ -1,6 +1,6 @@
 // frontend/src/components/ProductList.js
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function ProductList() {
     const [products, setProducts] = useState([]);
@@ -9,11 +9,14 @@ function ProductList() {
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const searchTerm = searchParams.get('search') || '';
-    const categoryFilter = searchParams.get('category') || ''; // Get 'category' query parameter
-    const [selectedCategory, setSelectedCategory] = useState(categoryFilter); // State for selected category in dropdown
-    const navigate = useNavigate(); // Hook for navigation
+    const categoryFilter = searchParams.get('category') || '';
+    const priceFilterMin = searchParams.get('minPrice') || ''; // Get minPrice from query
+    const priceFilterMax = searchParams.get('maxPrice') || ''; // Get maxPrice from query
+    const [selectedCategory, setSelectedCategory] = useState(categoryFilter);
+    const [minPrice, setMinPrice] = useState(priceFilterMin);     // State for min price input
+    const [maxPrice, setMaxPrice] = useState(priceFilterMax);     // State for max price input
+    const navigate = useNavigate();
 
-    // Example categories (replace with dynamic categories from backend in real app)
     const categories = ['All Categories', 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Puzzle'];
 
     useEffect(() => {
@@ -21,7 +24,7 @@ function ProductList() {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}`); // Include category in API request
+                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Include price range in API request
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -35,12 +38,31 @@ function ProductList() {
         };
 
         fetchProducts();
-    }, [searchTerm, selectedCategory]); // Re-fetch when searchTerm or selectedCategory changes
+    }, [searchTerm, selectedCategory, minPrice, maxPrice]); // Re-fetch when price range changes
 
     const handleCategoryChange = (event) => {
         const newCategory = event.target.value;
-        setSelectedCategory(newCategory); // Update selectedCategory state
-        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(newCategory)}`); // Update URL with category filter
+        setSelectedCategory(newCategory);
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(newCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Update URL with price range
+    };
+
+    const handleMinPriceChange = (event) => {
+        setMinPrice(event.target.value); // Update minPrice state
+        // Note: We don't navigate immediately on minPrice/maxPrice change, only on blur or explicit filter application
+    };
+
+    const handleMaxPriceChange = (event) => {
+        setMaxPrice(event.target.value); // Update maxPrice state
+    };
+
+    const applyPriceFilter = () => {
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}`); // Navigate with price range
+    };
+
+    const clearPriceFilter = () => {
+        setMinPrice(''); // Clear minPrice state
+        setMaxPrice(''); // Clear maxPrice state
+        navigate(`/?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=&maxPrice=`); // Navigate to clear price filter in URL
     };
 
 
@@ -48,18 +70,39 @@ function ProductList() {
         <div style={productListContainerStyle}>
             <h2 style={productListHeadingStyle}>Product Catalog</h2>
 
-            <div style={filterSectionStyle}> {/* Filter section container */}
+            <div style={filterSectionStyle}>
                 <label htmlFor="categoryFilter" style={filterLabelStyle}>Filter by Category:</label>
                 <select
                     id="categoryFilter"
                     value={selectedCategory}
                     onChange={handleCategoryChange}
-                    style={categoryDropdownStyle} // Style for category dropdown
+                    style={categoryDropdownStyle}
                 >
                     {categories.map(cat => (
-                        <option key={cat} value={cat === 'All Categories' ? '' : cat}>{cat}</option> // Options for categories
+                        <option key={cat} value={cat === 'All Categories' ? '' : cat}>{cat}</option>
                     ))}
                 </select>
+            </div>
+
+            <div style={priceFilterSectionStyle}> {/* Price filter section */}
+                <label style={filterLabelStyle}>Filter by Price:</label>
+                <input
+                    type="number"
+                    placeholder="Min Price"
+                    value={minPrice}
+                    onChange={handleMinPriceChange}
+                    style={priceInputStyle}
+                />
+                <span style={priceRangeSeparatorStyle}>-</span> {/* Separator dash */}
+                <input
+                    type="number"
+                    placeholder="Max Price"
+                    value={maxPrice}
+                    onChange={handleMaxPriceChange}
+                    style={priceInputStyle}
+                />
+                <button onClick={applyPriceFilter} style={applyFilterButtonStyle}>Apply</button> {/* Apply button */}
+                <button onClick={clearPriceFilter} style={clearFilterButtonStyle}>Clear</button> {/* Clear button */}
             </div>
 
 
@@ -93,6 +136,51 @@ function ProductList() {
         </div>
     );
 }
+
+// --- Add styles for price filter section and elements ---
+const priceFilterSectionStyle = {
+    marginBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+};
+
+const priceInputStyle = {
+    padding: '8px',
+    borderRadius: '4px',
+    border: '1px solid #555',
+    backgroundColor: '#444',
+    color: '#eee',
+    width: '80px',
+    marginRight: '5px',
+};
+
+const priceRangeSeparatorStyle = {
+    color: '#eee',
+    marginRight: '5px',
+    marginLeft: '5px',
+};
+
+const applyFilterButtonStyle = {
+    padding: '8px 15px',
+    borderRadius: '4px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    marginRight: '5px',
+};
+
+const clearFilterButtonStyle = {
+    padding: '8px 15px',
+    borderRadius: '4px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+};
+
 
 // --- Add styles for filter section and category dropdown ---
 const filterSectionStyle = {

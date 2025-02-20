@@ -16,19 +16,48 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const { search, category } = req.query; // Extract 'search' and 'category' query parameters
+        const { search, category, minPrice, maxPrice } = req.query;
 
-        let filter = {}; // Default filter is empty (get all products)
+        let filter = {};
 
         if (search) {
-            filter.$text = { $search: search }; // Add text search filter if search term is provided
+            filter.$text = { $search: search };
         }
 
         if (category) {
-            filter.category = category; // Add category filter if category is provided
+            filter.category = category;
         }
 
-        const products = await Product.find(filter); // Apply the combined filter
+        let priceFilter = {}; // Initialize priceFilter separately
+
+        const parsedMinPrice = parseFloat(minPrice);
+        const parsedMaxPrice = parseFloat(maxPrice);
+
+        const isValidMinPrice = !isNaN(parsedMinPrice); // Check if parsedMinPrice is a valid number (not NaN)
+        const isValidMaxPrice = !isNaN(parsedMaxPrice); // Check if parsedMaxPrice is a valid number (not NaN)
+
+
+        if (isValidMinPrice && isValidMaxPrice) { // Both minPrice and maxPrice are valid numbers
+            priceFilter = {
+                $gte: parsedMinPrice,
+                $lte: parsedMaxPrice
+            };
+        } else if (isValidMinPrice) { // Only minPrice is valid
+            priceFilter = {
+                $gte: parsedMinPrice
+            };
+        } else if (isValidMaxPrice) { // Only maxPrice is valid
+            priceFilter = {
+                $lte: parsedMaxPrice
+            };
+        }
+
+        if (Object.keys(priceFilter).length > 0) { // Only apply price filter if it's not empty
+            filter.price = priceFilter;
+        }
+
+
+        const products = await Product.find(filter);
         res.status(200).json(products);
     } catch (error) {
         console.error('Error getting products:', error);
