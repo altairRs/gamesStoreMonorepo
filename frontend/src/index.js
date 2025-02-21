@@ -4,13 +4,16 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
-        <CartProvider> {/* <-- CartProvider wrapping App */}
-            <App />
-        </CartProvider>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+            <CartProvider>
+                <App />
+            </CartProvider>
+        </AuthProvider>
     </React.StrictMode>
 );
 

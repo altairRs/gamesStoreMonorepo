@@ -1,6 +1,6 @@
 // frontend/src/App.js
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ProductList from './components/ProductList';
 import ProductDetails from './components/ProductDetails';
 import NavigationBar from './components/NavigationBar';
@@ -9,6 +9,7 @@ import Login from './components/Login'; // Import Login
 import Register from './components/Register'; // Import Register
 import Checkout from './components/Checkout';
 import ForgotPassword from './components/ForgotPassword';
+import Profile from './components/Profile';
 
 function App() {
     return (
@@ -24,6 +25,7 @@ function App() {
                     <Route path="/register" element={<Register />} /> {/* Route for Register */}
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Route for ForgotPassword */}
+                    <Route path="/profile" element={<Profile />} /> {/* Route for Profile Page */}
                 </Routes>
             </div>
         </BrowserRouter>

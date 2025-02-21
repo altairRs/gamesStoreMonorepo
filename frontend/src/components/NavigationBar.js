@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext'; // Import useAuth hook
 
 function NavigationBar() {
     const { cartItemsCount } = useCart();
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
+    const { isLoggedIn, logout } = useAuth(); // Use useAuth hook to get auth state and functions
 
     const handleSearchInputChange = (event) => {
         setSearchTerm(event.target.value);
@@ -16,6 +18,12 @@ function NavigationBar() {
         event.preventDefault();
         navigate(`/?search=${encodeURIComponent(searchTerm)}`);
     };
+
+    const handleLogout = () => {
+        logout(); // Call logout function from AuthContext
+        navigate('/'); // Redirect to homepage after logout
+    };
+
 
     return (
         <nav style={navBarStyle}>
@@ -40,18 +48,44 @@ function NavigationBar() {
                         🛒 Cart ({cartItemsCount})
                     </Link>
                 </li>
-                {/* New "Sign In" Button/Link */}
-                <li style={navListItemStyle}>
-                    <Link to="/login" style={signInButtonStyle}>Sign In</Link>
-                </li>
-                {/* Placeholder for "Profile" Link (will be conditional later) */}
-                {/* <li style={navListItemStyle}>
-                    <Link to="/profile" style={navLinkStyle}>Profile</Link>
-                </li> */}
+
+                {isLoggedIn ? ( // Conditionally render links based on isLoggedIn state
+                    <> {/* React.Fragment to group multiple elements */}
+                        <li style={navListItemStyle}>
+                            <Link to="/profile" style={navLinkStyle}>Profile</Link>
+                        </li>
+                        <li style={navListItemStyle}>
+                            <button onClick={handleLogout} style={logoutButtonStyle}>Logout</button> {/* Logout button */}
+                        </li>
+                    </>
+                ) : (
+                    <li style={navListItemStyle}>
+                        <Link to="/login" style={signInButtonStyle}>Sign In</Link>
+                    </li>
+                )}
             </ul>
         </nav>
     );
 }
+
+// --- Add style for Logout button ---
+const logoutButtonStyle = {
+    padding: '8px 15px',
+    borderRadius: '4px',
+    backgroundColor: '#dc3545', // Example red color for logout
+    color: 'white',
+    textDecoration: 'none',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+    marginLeft: '10px', // Add some left margin to separate from profile link
+
+    '&:hover': {
+        backgroundColor: '#c82333', // Darker red on hover
+    },
+};
 
 // --- Styles for "Sign In" Button/Link ---
 const signInButtonStyle = {

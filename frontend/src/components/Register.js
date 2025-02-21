@@ -1,6 +1,7 @@
 // frontend/src/components/Register.js
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Import useNavigate and Link
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Import useAuth hook
 
 function Register() {
     const [username, setUsername] = useState('');
@@ -8,18 +9,19 @@ function Register() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { register } = useAuth(); // Use useAuth hook to get register function
 
     const handleRegister = async (event) => {
         event.preventDefault();
         setError('');
 
         try {
-            const response = await fetch('http://localhost:4000/api/users/register', { // Fetch API for registration
+            const response = await fetch('http://localhost:4000/api/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, email, password }), // Send username, email, password in body
+                body: JSON.stringify({ username, email, password }),
             });
 
             const data = await response.json();
@@ -27,11 +29,11 @@ function Register() {
             if (response.ok) {
                 // Registration successful
                 console.log('Registration successful:', data);
-                alert('Registration successful! Please login.'); // Success alert
-                navigate('/login'); // Redirect to login page after registration
+                register(data.token, { userId: data.userId, username: data.username, email: data.email }); // Call register function from AuthContext
+                alert('Registration successful! Please login.');
+                navigate('/login');
             } else {
-                // Registration failed
-                setError(data.message || 'Registration failed'); // Set error message from backend response or default
+                setError(data.message || 'Registration failed');
                 console.error('Registration failed:', data);
             }
         } catch (e) {

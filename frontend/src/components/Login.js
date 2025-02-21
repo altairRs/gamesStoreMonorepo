@@ -1,25 +1,26 @@
 // frontend/src/components/Login.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; // Import useNavigate and Link
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate(); // Hook for programmatic navigation
+    const navigate = useNavigate();
+    const { login } = useAuth(); // Use useAuth hook to get login function
 
     const handleLogin = async (event) => {
-        event.preventDefault(); // Prevent default form submission
-
-        setError(''); // Clear any previous errors
+        event.preventDefault();
+        setError('');
 
         try {
-            const response = await fetch('http://localhost:4000/api/users/login', { // Fetch API for login
+            const response = await fetch('http://localhost:4000/api/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ usernameOrEmail: email, password }), // Send email as usernameOrEmail
+                body: JSON.stringify({ usernameOrEmail: email, password }),
             });
 
             const data = await response.json();
@@ -27,17 +28,15 @@ function Login() {
             if (response.ok) {
                 // Login successful
                 console.log('Login successful:', data);
-                // Store token in local storage or context if needed for authentication
-                localStorage.setItem('authToken', data.token); // Example: Store token in localStorage
-                alert('Login successful!'); // Basic success feedback
-                navigate('/'); // Redirect to homepage after successful login
+                login(data.token, { userId: data.userId, username: data.username, email: data.email }); // Call login function from AuthContext
+                alert('Login successful!');
+                navigate('/');
             } else {
-                // Login failed
-                setError(data.message || 'Login failed'); // Set error message from backend response or default
+                setError(data.message || 'Login failed');
                 console.error('Login failed:', data);
             }
         } catch (e) {
-            setError('Failed to connect to server'); // Error for network issues, etc.
+            setError('Failed to connect to server');
             console.error('Login error:', e);
         }
     };
