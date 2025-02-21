@@ -73,7 +73,7 @@ function Login() {
 
                 <div className="remember-forgot" style={rememberForgotStyle}> {/* Apply remember-forgot style */}
                     <label style={rememberLabelStyle}><input type="checkbox" style={checkboxStyle} /> Remember </label> {/* Apply remember label and checkbox styles */}
-                    <Link to="/reset-password" style={forgotPasswordLinkStyle}>Forgot Password?</Link> {/* Apply forgot password link style */}
+                    <Link to="/forgot-password" style={forgotPasswordLinkStyle}>Forgot Password?</Link> {/* Correct Link to /forgot-password */}
                 </div>
 
                 <button type="submit" className="btn" style={loginButtonStyle}>Login</button> {/* Apply login button style */}

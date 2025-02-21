@@ -8,6 +8,7 @@ import ShoppingCart from './components/ShoppingCart';
 import Login from './components/Login'; // Import Login
 import Register from './components/Register'; // Import Register
 import Checkout from './components/Checkout';
+import ForgotPassword from './components/ForgotPassword';
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/login" element={<Login />} /> {/* Route for Login */}
                     <Route path="/register" element={<Register />} /> {/* Route for Register */}
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Route for ForgotPassword */}
                 </Routes>
             </div>
         </BrowserRouter>

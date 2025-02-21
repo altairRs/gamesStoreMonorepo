@@ -51,3 +51,58 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Failed to login', error: error.message });
     }
 };
+
+exports.resetPasswordChallenge = async (req, res) => {
+    try {
+        const { usernameOrEmail, wallahiChallenge } = req.body;
+
+        // Find user by username or email
+        const user = await User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' }); // User not found
+        }
+
+        // Verify "wallahi" challenge (case-insensitive comparison)
+        if (wallahiChallenge.toLowerCase() !== 'wallahi') {
+            return res.status(400).json({ message: 'Incorrect verification word' }); // Incorrect wallahi
+        }
+
+        // If user found and wallahi is correct, you could generate a temporary token here
+        // For this simplified example, we'll just send a success message indicating challenge passed
+
+        res.status(200).json({ message: 'Verification successful. Proceed to reset password.' }); // Challenge passed
+    } catch (error) {
+        console.error('Error in reset password challenge:', error);
+        res.status(500).json({ message: 'Failed to process password reset challenge', error: error.message }); // Server error
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { usernameOrEmail, newPassword } = req.body;
+        const user = await User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Hash password *before* assigning to user.password and saving
+        const passwordToSave = hashedPassword; // Assign hashed password to a variable
+
+        console.log('Hashed Password to be saved:', passwordToSave); // Log hashed password before assignment
+
+        user.password = passwordToSave; // Assign the *already hashed* password
+        await user.save();
+
+        console.log('user.save() completed successfully.');
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ message: 'Failed to reset password', error: error.message });
+    }
+};

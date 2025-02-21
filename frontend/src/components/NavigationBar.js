@@ -1,20 +1,20 @@
 // frontend/src/components/NavigationBar.js
-import React, { useState } from 'react'; // Import useState
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 function NavigationBar() {
     const { cartItemsCount } = useCart();
-    const [searchTerm, setSearchTerm] = useState(''); // State for search term
-    const navigate = useNavigate(); // Hook for programmatic navigation
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     const handleSearchInputChange = (event) => {
-        setSearchTerm(event.target.value); // Update searchTerm state on input change
+        setSearchTerm(event.target.value);
     };
 
     const handleSearchSubmit = (event) => {
-        event.preventDefault(); // Prevent default form submission behavior
-        navigate(`/?search=${encodeURIComponent(searchTerm)}`); // Navigate to homepage with search query
+        event.preventDefault();
+        navigate(`/?search=${encodeURIComponent(searchTerm)}`);
     };
 
     return (
@@ -24,15 +24,15 @@ function NavigationBar() {
                     <Link to="/" style={navLinkStyle}>Home</Link>
                 </li>
                 <li style={navListItemStyle}>
-                    <form onSubmit={handleSearchSubmit} style={{ display: 'flex' }}> {/* Search form */}
+                    <form onSubmit={handleSearchSubmit} style={{ display: 'flex' }}>
                         <input
                             type="text"
                             placeholder="Search games..."
                             value={searchTerm}
                             onChange={handleSearchInputChange}
-                            style={searchInputStyle} // Style for search input
+                            style={searchInputStyle}
                         />
-                        <button type="submit" style={searchButtonStyle}>Search</button> {/* Search button */}
+                        <button type="submit" style={searchButtonStyle}>Search</button>
                     </form>
                 </li>
                 <li style={navListItemStyle}>
@@ -40,10 +40,36 @@ function NavigationBar() {
                         🛒 Cart ({cartItemsCount})
                     </Link>
                 </li>
+                {/* New "Sign In" Button/Link */}
+                <li style={navListItemStyle}>
+                    <Link to="/login" style={signInButtonStyle}>Sign In</Link>
+                </li>
+                {/* Placeholder for "Profile" Link (will be conditional later) */}
+                {/* <li style={navListItemStyle}>
+                    <Link to="/profile" style={navLinkStyle}>Profile</Link>
+                </li> */}
             </ul>
         </nav>
     );
 }
+
+// --- Styles for "Sign In" Button/Link ---
+const signInButtonStyle = {
+    padding: '8px 15px',
+    borderRadius: '4px',
+    backgroundColor: '#00aaff', // Example button color
+    color: 'white',
+    textDecoration: 'none',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+
+    '&:hover': {
+        backgroundColor: '#0088cc', // Darker shade on hover
+    },
+};
 
 // --- Add styles for search input and button ---
 const searchInputStyle = {
