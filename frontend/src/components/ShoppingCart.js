@@ -1,6 +1,7 @@
 // frontend/src/components/ShoppingCart.js
 import React from 'react';
 import { useCart } from '../context/CartContext'; // Import useCart hook
+import { Link } from 'react-router-dom';
 
 function ShoppingCart() {
     const { cart, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart(); // Get cart functions and data
@@ -56,11 +57,25 @@ function ShoppingCart() {
             <div style={cartSummaryStyle}>
                 <p style={cartTotalTextStyle}>Total: ${cartTotal.toFixed(2)}</p>
                 <button style={clearCartButtonStyle} onClick={handleClearCart}>Clear Cart</button>
-                {/* Add "Proceed to Checkout" button later */}
+                <Link to="/checkout" style={{ textDecoration: 'none' }}> {/* Link to Checkout page */}
+                    <button style={proceedCheckoutButtonStyle}>Proceed to Checkout</button> {/* "Proceed to Checkout" button */}
+                </Link>
             </div>
         </div>
     );
 }
+
+const proceedCheckoutButtonStyle = {
+    padding: '10px 20px',
+    backgroundColor: '#00aaff', // Example color for checkout button
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    marginLeft: '10px',
+    fontWeight: 'bold',
+};
 
 // --- Inline Styles for Shopping Cart (customize as needed) ---
 const shoppingCartContainerStyle = {

@@ -7,6 +7,7 @@ import NavigationBar from './components/NavigationBar';
 import ShoppingCart from './components/ShoppingCart';
 import Login from './components/Login'; // Import Login
 import Register from './components/Register'; // Import Register
+import Checkout from './components/Checkout';
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                     <Route path="/cart" element={<ShoppingCart />} />
                     <Route path="/login" element={<Login />} /> {/* Route for Login */}
                     <Route path="/register" element={<Register />} /> {/* Route for Register */}
+                    <Route path="/checkout" element={<Checkout />} />
                 </Routes>
             </div>
         </BrowserRouter>
