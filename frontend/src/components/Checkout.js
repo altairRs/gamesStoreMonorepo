@@ -1,19 +1,47 @@
 // frontend/src/components/Checkout.js
 import React from 'react';
-import { useCart } from '../context/CartContext'; // Import useCart hook
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Import useAuth hook
 
 function Checkout() {
-    const { cart, cartTotal, clearCart } = useCart(); // Get cart data and clearCart function
-    const navigate = useNavigate(); // Hook for navigation
+    const { cart, cartTotal, clearCart } = useCart();
+    const navigate = useNavigate();
+    const { token } = useAuth(); // Get token from AuthContext
 
-    const handlePlaceOrder = () => {
-        // In a real application, you would send order details to the backend here
-        // For this simplified example, we'll just simulate order placement:
+    const handlePlaceOrder = async () => {
+        console.log('JWT Token in Checkout.js:', token);
+        try {
+            const orderItems = cart.map(item => ({ // Prepare order items array for backend
+                productId: item._id,
+                quantity: item.quantity,
+            }));
 
-        alert("Order Placed Successfully!\n\n(This is a demo, no actual order processing or payment is implemented)");
-        clearCart(); // Clear the cart after "placing" order
-        navigate('/'); // Redirect back to the homepage after checkout
+            const response = await fetch('http://localhost:4000/api/orders', { // Call backend API to place order
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Include JWT token in Authorization header
+                },
+                body: JSON.stringify({ products: orderItems }), // Send products array in request body
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Order placed successfully
+                console.log('Order placed successfully:', data);
+                clearCart(); // Clear cart on successful order
+                navigate('/order-confirmation'); // Redirect to order confirmation page (next step)
+            } else {
+                // Order placement failed
+                console.error('Order placement failed:', data);
+                alert(`Order placement failed: ${data.message || 'Unknown error'}`); // Show error message to user
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+            alert('Failed to connect to server and place order.'); // Network error
+        }
     };
 
     if (cart.length === 0) {
@@ -43,7 +71,7 @@ function Checkout() {
 
             <div style={checkoutActionSectionStyle}>
                 <button style={placeOrderButtonStyle} onClick={handlePlaceOrder}>
-                    Place Order (Simulated)
+                    Place Order
                 </button>
                 {/* In a real app, you would have payment processing steps here */}
             </div>

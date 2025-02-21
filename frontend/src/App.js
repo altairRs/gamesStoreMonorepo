@@ -10,6 +10,7 @@ import Register from './components/Register'; // Import Register
 import Checkout from './components/Checkout';
 import ForgotPassword from './components/ForgotPassword';
 import Profile from './components/Profile';
+import OrderConfirmation from './components/OrderConfirmation';
 
 function App() {
     return (
@@ -21,11 +22,12 @@ function App() {
                     <Route path="/" element={<ProductList />} />
                     <Route path="/products/:productId" element={<ProductDetails />} />
                     <Route path="/cart" element={<ShoppingCart />} />
-                    <Route path="/login" element={<Login />} /> {/* Route for Login */}
-                    <Route path="/register" element={<Register />} /> {/* Route for Register */}
                     <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Route for ForgotPassword */}
-                    <Route path="/profile" element={<Profile />} /> {/* Route for Profile Page */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/order-confirmation" element={<OrderConfirmation />} /> {/* Route for OrderConfirmation */}
                 </Routes>
             </div>
         </BrowserRouter>

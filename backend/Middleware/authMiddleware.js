@@ -3,26 +3,41 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/user'); // Import User model
 
 const authMiddleware = async (req, res, next) => {
-    // Get token from header
-    const token = req.header('Authorization');
+    let token = req.header('Authorization'); // Get the full Authorization header value
 
-    // Check if no token
+
+
     if (!token) {
-        return res.status(401).json({ message: 'No token, authorization denied' }); // 401 Unauthorized
+        console.log('No token provided in Authorization header.');
+        return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
-    try {
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key'); // Verify token using secret key
+    // --- NEW CODE: Remove "Bearer " prefix if present ---
+    if (token.startsWith('Bearer ')) {
+        token = token.slice(7, token.length); // Extract token string after "Bearer "
+    }
+    console.log('Extracted Token (after removing Bearer prefix):', token); // Log the extracted token
 
-        // Add user from payload to request object
-        req.user = await User.findById(decoded.userId).select('-password'); // Fetch user by ID from token, exclude password
+    try {
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
+
+
+
+        req.user = await User.findById(decoded.userId).select('-password');
+        console.log('Authenticated User object fetched from DB:', req.user); // <-- Add this line
+
         if (!req.user) {
-            return res.status(401).json({ message: 'Token is not valid for any user' }); // Token valid format, but user not found
+            console.log('User not found in database for userId:', decoded.userId);
+            return res.status(401).json({ message: 'Token is not valid for any user' });
         }
-        next(); // Call next middleware in the chain (route handler)
+
+        console.log('Authenticated User found:', req.user);
+
+        next();
     } catch (error) {
-        res.status(401).json({ message: 'Token is not valid' }); // 401 Unauthorized - token invalid verification
+        console.error('JWT Verification Error:', error);
+        res.status(401).json({ message: 'Token is not valid', error: error.message });
     }
 };
 

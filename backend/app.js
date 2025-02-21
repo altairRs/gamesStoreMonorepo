@@ -14,6 +14,8 @@ app.use(cors());
 const userRoutes = require('./Routes/userRoutes');
 // Import Product Routes
 const productRoutes = require('./Routes/productRoutes');
+// Import Order Routes
+const orderRoutes = require('./Routes/orderRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -22,6 +24,8 @@ connectDB();
 app.use('/api/users', userRoutes);
 // Mount Product Routes
 app.use('/api/products', productRoutes);
+// Mount Order Routes
+app.use('/api/orders', orderRoutes);
 
 // Sample Route
 app.get("/", (req, res) => {
