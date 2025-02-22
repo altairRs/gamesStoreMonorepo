@@ -1,44 +1,40 @@
 // backend/Controllers/orderController.js
-const Order = require('../Models/order'); // Import Order model
-const Product = require('../Models/product'); // Import Product model (to verify product existence and price)
-const UserLog = require('../Models/userLog'); // Import UserLog model (to log order activity)
+const Order = require('../Models/order');
+const Product = require('../Models/product');
+const UserLog = require('../Models/userLog'); // Import UserLog model
 
 // Function to place a new order
 exports.placeOrder = async (req, res) => {
     try {
-        const { products: orderedProducts } = req.body; // Get products array from request body
+        const { products: orderedProducts } = req.body;
         const userId = req.user._id;   // Get user ID from authenticated user (authMiddleware)
 
-        console.log('userId variable value (before Order creation):', userId);
-
-        console.log('req.user in placeOrder controller:', req.user);
-
         if (!orderedProducts || !Array.isArray(orderedProducts) || orderedProducts.length === 0) {
-            return res.status(400).json({ message: 'No products in order' }); // Validate product list
+            return res.status(400).json({ message: 'No products in order' });
         }
 
         let orderItems = [];
         let totalAmount = 0;
+        let productDetailsForLog = []; // Array to collect product details for logging
 
         for (const orderedProduct of orderedProducts) {
             const { productId, quantity } = orderedProduct;
 
             if (!productId || !quantity || quantity <= 0) {
-                return res.status(400).json({ message: 'Invalid product data in order' }); // Validate individual product data
+                return res.status(400).json({ message: 'Invalid product data in order' });
             }
 
-            const product = await Product.findById(productId); // Fetch product details from database
+            const product = await Product.findById(productId);
 
             if (!product) {
-                return res.status(404).json({ message: `Product not found: ${productId}` }); // Check if product exists
+                return res.status(404).json({ message: `Product not found: ${productId}` });
             }
 
             if (product.stockQuantity < quantity) {
-                return res.status(400).json({ message: `Insufficient stock for product: ${product.name}` }); // Check stock quantity
+                return res.status(400).json({ message: `Insufficient stock for product: ${product.name}` });
             }
 
-
-            const itemPrice = product.price; // Use current product price from database
+            const itemPrice = product.price;
             const itemName = product.name;
 
             orderItems.push({
@@ -49,11 +45,13 @@ exports.placeOrder = async (req, res) => {
             });
             totalAmount += itemPrice * quantity;
 
-             // Optionally decrease stock quantity after successful order (for digital games, you might skip this or handle differently)
-             // product.stockQuantity -= quantity;
-             // await product.save(); // Save updated stock quantity
+            productDetailsForLog.push({ // Add product details for logging
+                productId: product._id,
+                productName: itemName,
+                quantity: quantity,
+                itemPrice: itemPrice
+            });
         }
-
 
         const order = new Order({
             userId: userId,
@@ -62,9 +60,26 @@ exports.placeOrder = async (req, res) => {
             // You can add shipping address and other order details here from req.body if needed
         });
 
-        const savedOrder = await order.save(); // Save the order to the database
+        const savedOrder = await order.save();
 
-        res.status(201).json(savedOrder); // Respond with the saved order
+        // --- Logging Order Placement (after successful order save) ---
+        const activityDetails = {
+            orderId: savedOrder._id, // Log the newly created order ID
+            totalAmount: totalAmount,
+            productCount: orderItems.length,
+            products: productDetailsForLog // Log array of product details in the order
+            // You can add more order details to log if needed (e.g., shipping address, payment method, etc.)
+        };
+
+        await UserLog.create({
+            userId: userId, // User ID is always available as placeOrder is a protected route
+            activityType: 'purchase', // Use 'purchase' or 'orderPlaced' as activity type
+            activityDetails: activityDetails
+        });
+        console.log('Order placed and logged:', activityDetails, 'User ID:', userId); // Optional console log
+
+        res.status(201).json(savedOrder);
+
     } catch (error) {
         console.error('Error placing order:', error);
         res.status(500).json({ message: 'Failed to place order', error: error.message });
@@ -114,4 +129,3 @@ exports.getUserOrders = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch order history', error: error.message });
     }
 };
-
