@@ -1,6 +1,7 @@
 // backend/Controllers/orderController.js
 const Order = require('../Models/order'); // Import Order model
 const Product = require('../Models/product'); // Import Product model (to verify product existence and price)
+const UserLog = require('../Models/userLog'); // Import UserLog model (to log order activity)
 
 // Function to place a new order
 exports.placeOrder = async (req, res) => {
@@ -113,3 +114,4 @@ exports.getUserOrders = async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch order history', error: error.message });
     }
 };
+

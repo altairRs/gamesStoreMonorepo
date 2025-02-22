@@ -1,4 +1,6 @@
+// backend/Controllers/productController.js
 const Product = require('../Models/product');
+const UserLog = require('../Models/userLog');
 
 exports.createProduct = async (req, res) => {
     try {
@@ -69,6 +71,21 @@ exports.getProductById = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+
+        // --- Logging Product View ---
+        const userId = req.user?._id; // Get userId from authenticated user (if logged in), otherwise undefined/null
+        const activityDetails = {
+            productId: product._id,
+            productName: product.name,
+            category: product.category // You can add more product details to log if needed
+        };
+
+        await UserLog.create({
+            userId: userId || null, // Use userId if available, otherwise null for anonymous view
+            activityType: 'productView',
+            activityDetails: activityDetails
+        });
+        console.log('Product view logged:', activityDetails, 'User ID:', userId || 'Anonymous'); // Optional console log for debugging
 
         res.status(200).json(product);
     } catch (error) {

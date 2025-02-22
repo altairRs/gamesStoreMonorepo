@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // Hook to access URL parameters
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 
 function ProductDetails() {
@@ -10,16 +11,26 @@ function ProductDetails() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { addToCart } = useCart();
+    const { token } = useAuth();
 
     useEffect(() => {
         const fetchProduct = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:4000/api/products/${productId}`); // Fetch product by ID
+                const headers = new Headers(); // Create Headers object
+                headers.append('Content-Type', 'application/json'); // Keep Content-Type
+
+                if (token) { // Check if token exists (user is logged in)
+                    headers.append('Authorization', `Bearer ${token}`); // Add Authorization header if token exists
+                }
+
+                const response = await fetch(`http://localhost:4000/api/products/${productId}`, {
+                    headers: headers // Pass the Headers object to fetch
+                });
                 if (!response.ok) {
                     if (response.status === 404) {
-                        throw new Error('Product not found'); // Specific error for 404
+                        throw new Error('Product not found');
                     } else {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
@@ -34,7 +45,7 @@ function ProductDetails() {
         };
 
         fetchProduct();
-    }, [productId]); // Re-fetch product if productId in URL changes
+    }, [productId, token]); // Add token to dependency array
 
     if (loading) {
         return <p style={{ color: '#eee' }}>Loading product details...</p>;
