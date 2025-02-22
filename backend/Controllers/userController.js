@@ -1,3 +1,4 @@
+// backend/Controllers/userController.js
 const User = require('../Models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -81,24 +82,28 @@ exports.resetPasswordChallenge = async (req, res) => {
 exports.resetPassword = async (req, res) => {
     try {
         const { usernameOrEmail, newPassword } = req.body;
+        console.log('Reset Password Request for usernameOrEmail:', usernameOrEmail);
         const user = await User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] });
 
         if (!user) {
+            console.log('User not found for reset:', usernameOrEmail);
             return res.status(404).json({ message: 'User not found' });
         }
+        console.log('User found for reset:', user.username || user.email, user._id);
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        // Removed because causing double hashing (middleware already hashes password)
+        // const salt = await bcrypt.genSalt(10); // REMOVE THIS LINE
+        // const hashedPassword = await bcrypt.hash(newPassword, salt); // REMOVE THIS LINE
+        // console.log('Hashed Password (in controller) BEFORE save:', hashedPassword); // REMOVE OR COMMENT OUT
+        // const passwordToSave = hashedPassword; // REMOVE THIS LINE
 
-        // Hash password *before* assigning to user.password and saving
-        const passwordToSave = hashedPassword; // Assign hashed password to a variable
+        // **Just assign the *plain text* newPassword to user.password**
+        user.password = newPassword; // Assign the *plain text* new password
 
-        console.log('Hashed Password to be saved:', passwordToSave); // Log hashed password before assignment
+        console.log('Password to be assigned to user.password (plain text in controller):', newPassword.substring(0, 10) + '...'); // Log first part of plain text password
+        await user.save(); // Now, middleware will hash it
 
-        user.password = passwordToSave; // Assign the *already hashed* password
-        await user.save();
-
-        console.log('user.save() completed successfully.');
+        console.log('User saved successfully AFTER password reset. User _id:', user._id);
 
         res.status(200).json({ message: 'Password reset successfully' });
     } catch (error) {
