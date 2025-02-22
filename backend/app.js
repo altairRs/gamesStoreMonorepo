@@ -3,6 +3,7 @@ const express = require("express");
 const connectDB = require("./db");
 require("dotenv").config();
 const cors = require('cors');
+const logRoutes = require('./Routes/logRoutes'); // Import log routes
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,6 +28,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 // Mount Order Routes
 app.use('/api/orders', orderRoutes);
+// Mount Log Routes
+app.use('/api/logs', logRoutes);
 
 // Sample Route
 app.get("/", (req, res) => {

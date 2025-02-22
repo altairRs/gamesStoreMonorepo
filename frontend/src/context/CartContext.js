@@ -1,21 +1,40 @@
 // frontend/src/context/CartContext.js
 import React, { createContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 // Create a new context
 export const CartContext = createContext();
 
 // CartProvider component to wrap around your application
 export const CartProvider = ({ children }) => {
-    // Initialize cart state from local storage or as empty array
     const [cart, setCart] = useState(() => {
         const localCart = localStorage.getItem('shoppingCart');
         return localCart ? JSON.parse(localCart) : [];
     });
+    const { token } = useAuth(); // Get token from AuthContext
 
-    // useEffect to update local storage whenever cart changes
     useEffect(() => {
         localStorage.setItem('shoppingCart', JSON.stringify(cart));
     }, [cart]);
+
+    const logCartAction = async (activityType, activityDetails) => {
+        try {
+            const response = await fetch('http://localhost:4000/api/logs/cart-action', { // New API endpoint for cart actions
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : undefined, // Include token if logged in
+                },
+                body: JSON.stringify({ activityType, activityDetails }),
+            });
+            if (!response.ok) {
+                console.error('Failed to log cart action:', activityType, response.status, await response.text());
+            }
+        } catch (error) {
+            console.error('Error logging cart action:', activityType, error);
+        }
+    };
+
 
     // Function to add an item to the cart
     const addToCart = (product, quantity = 1) => {
@@ -23,38 +42,40 @@ export const CartProvider = ({ children }) => {
         setCart(currentCart => {
             const productExists = currentCart.find(item => item._id === product._id);
             if (productExists) {
-                // If product is already in cart, update quantity
                 return currentCart.map(item =>
                     item._id === product._id ? { ...item, quantity: item.quantity + quantity } : item
                 );
             } else {
-                // If product is new to cart, add it
                 return [...currentCart, cartItem];
             }
         });
+        logCartAction('addToCart', { productId: product._id, productName: product.name, quantity }); // Log addToCart action
     };
 
     // Function to remove an item from the cart
     const removeFromCart = (productId) => {
         setCart(currentCart => currentCart.filter(item => item._id !== productId));
+        logCartAction('removeFromCart', { productId }); // Log removeFromCart action
     };
 
     // Function to update item quantity in cart
     const updateQuantity = (productId, newQuantity) => {
         if (newQuantity <= 0) {
-            removeFromCart(productId); // Remove if quantity is set to 0 or less
+            removeFromCart(productId);
         } else {
             setCart(currentCart =>
                 currentCart.map(item =>
                     item._id === productId ? { ...item, quantity: newQuantity } : item
                 )
             );
+            logCartAction('updateCartQuantity', { productId, quantity: newQuantity }); // Log updateCartQuantity action
         }
     };
 
     // Function to clear the entire cart
     const clearCart = () => {
         setCart([]);
+        logCartAction('clearCart', {}); // Log clearCart action (no specific details needed)
     };
 
     // Calculate total cart items count
