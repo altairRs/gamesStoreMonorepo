@@ -1,6 +1,7 @@
 // backend/Controllers/productController.js
 const Product = require('../Models/product');
 const UserLog = require('../Models/userLog');
+const jwt = require('jsonwebtoken');
 
 exports.createProduct = async (req, res) => {
     try {
@@ -18,7 +19,45 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const { search, category, minPrice, maxPrice, sortBy, sortOrder } = req.query; // Extract sorting parameters
+        const { search, category, minPrice, maxPrice, sortBy, sortOrder } = req.query;
+
+        // --- Manual JWT Verification for User ID (for public route logging) ---
+        let userId = null; // Default to null (anonymous)
+        const authHeader = req.headers.authorization; // Get Authorization header
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7); // Extract token (remove "Bearer ")
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key'); // Verify token
+                userId = decoded.userId; // Extract userId if token is valid
+            } catch (err) {
+                console.error('JWT Verification Failed (in getProducts for logging):', err.message);
+                // Token is invalid or expired, but we still proceed as it's a public route.
+                // We just won't have a userId for logging.
+            }
+        }
+        // --- End Manual JWT Verification ---
+
+
+        // --- Logging Search Activity (rest remains the same, using the resolved userId) ---
+        if (search) {
+            const activityDetails = {
+                searchTerm: search,
+                categoryFilter: category || 'All Categories', // Log category filter if applied
+                priceRange: (minPrice || maxPrice) ? { minPrice: minPrice || 'No Min', maxPrice: maxPrice || 'No Max' } : 'No Price Filter', // Log price range if applied
+                sortBy: sortBy || 'No Sorting', // Log sorting if applied
+                sortOrder: sortOrder || ''
+                // You can add more search parameters to log if needed (e.g., pagination, etc.)
+            };
+
+            await UserLog.create({
+                userId: userId || null, // Use resolved userId (could be from token or null)
+                activityType: 'search',
+                activityDetails: activityDetails
+            });
+            console.log('Search activity logged:', activityDetails, 'User ID:', userId || 'Anonymous'); // Optional console log
+        }
+        // --- End Logging Search Activity ---
+
 
         let filter = {};
         if (search) {

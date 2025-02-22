@@ -1,6 +1,7 @@
 // frontend/src/components/ProductList.js
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; 
 
 function ProductList() {
     const [products, setProducts] = useState([]);
@@ -20,6 +21,7 @@ function ProductList() {
     const [sortBy, setSortBy] = useState(sortFilterBy);       // State for sortBy dropdown
     const [sortOrder, setSortOrder] = useState(sortFilterOrder); // State for sortOrder (asc/desc) - not directly used in UI dropdown in this example
     const navigate = useNavigate();
+    const { token } = useAuth();
 
     const categories = ['All Categories', 'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Puzzle'];
     const sortByOptions = [ // Options for sorting dropdown
@@ -36,7 +38,17 @@ function ProductList() {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(sortBy.split('-')[0])}&sortOrder=${encodeURIComponent(sortBy.split('-')[1])}`); // Include sorting in API request
+                const headers = new Headers(); // Create Headers object
+                headers.append('Content-Type', 'application/json');
+
+                if (token) { // Check if token exists (user is logged in)
+                    headers.append('Authorization', `Bearer ${token}`); // Add Authorization header if token exists
+                }
+
+
+                const response = await fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(selectedCategory)}&minPrice=${encodeURIComponent(minPrice)}&maxPrice=${encodeURIComponent(maxPrice)}&sortBy=${encodeURIComponent(sortBy.split('-')[0])}&sortOrder=${encodeURIComponent(sortBy.split('-')[1])}`, {
+                    headers: headers // Pass headers to fetch
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -50,7 +62,7 @@ function ProductList() {
         };
 
         fetchProducts();
-    }, [searchTerm, selectedCategory, minPrice, maxPrice, sortBy]); // Re-fetch when sorting changes
+    }, [searchTerm, selectedCategory, minPrice, maxPrice, sortBy, token]);
 
 
     const handleCategoryChange = (event) => {
